@@ -42,6 +42,8 @@ class EDA(Modeling):
         if 'Company_Size' in self.dataset.columns:
             self.dataset['Company_Size'] = self.dataset['Company_Size'].map(
                 size_mapping)
+            if self.dataset['Company_Size'].isna().any():
+                raise ValueError("Unmapped Company_Size values found")
 
         if 'Has_Strict_AI_Governance' in self.dataset.columns:
             self.dataset['Has_Strict_AI_Governance'] = self.dataset['Has_Strict_AI_Governance'].astype(
@@ -55,6 +57,6 @@ class EDA(Modeling):
             c for c in nominal_cols if c in self.dataset.columns]
         if existing_nominals:
             self.dataset = pd.get_dummies(
-                self.dataset, columns=existing_nominals, drop_first=True)
+                self.dataset, columns=existing_nominals, drop_first=True, dtype=int)
 
         return self.dataset

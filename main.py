@@ -45,7 +45,7 @@ def main():
     print("\n=== 1. Classification: Has_Roles_Replaced ===")
     clf_model = ModelLearn(featureselect.getDataset())
     clf_model.splitDataset('Has_Roles_Replaced',
-                           drop_cols=drop_for_incidence, test_size=0.3)
+                           drop_cols=drop_for_incidence, test_size=0.3, stratify=True)
     clf_model.trainIncidence()
     clf_model.predictIncidence()
     clf_model.evaluateIncidence()

@@ -6,7 +6,7 @@ import numpy as np
 
 class Modeling:
     def __init__(self, dataset: pd.DataFrame):
-        self.dataset = dataset
+        self.dataset = dataset.copy()
 
     def getDataset(self):
         return self.dataset
@@ -14,8 +14,9 @@ class Modeling:
     def showBasicInfo(self):
         print(
             f"Rows: {self.dataset.shape[0]}\nColumns: {self.dataset.shape[1]}")
-        print(f"{self.dataset.info()}\n\n")
-        print(f"{self.dataset.head()}")
+        self.dataset.info()
+        print()
+        print(self.dataset.head())
 
     def showHistogram(self, columnName):
         sns.histplot(self.dataset[columnName], kde=True)

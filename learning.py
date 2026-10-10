@@ -27,7 +27,8 @@ class ModelLearn(Modeling):
         self.y_pred = None
         self.is_log_target = False
 
-    def splitDataset(self, target_col: str, drop_cols: list = None, test_size: float = 0.3, log_transform_target: bool = False):
+    def splitDataset(self, target_col: str, drop_cols: list = None, test_size: float = 0.3,
+                     log_transform_target: bool = False, stratify: bool = False):
         drop_list = [target_col]
         if drop_cols:
             drop_list.extend(
@@ -38,7 +39,8 @@ class ModelLearn(Modeling):
         self.is_log_target = log_transform_target
 
         self.X_train, self.X_test, self.Y_train, self.Y_test = train_test_split(
-            X, y, test_size=test_size, random_state=42
+            X, y, test_size=test_size, random_state=42,
+            stratify=y if stratify else None
         )
 
         self.X_train = self.scaler.fit_transform(self.X_train)
@@ -75,7 +77,7 @@ class ModelLearn(Modeling):
     def predictRegression(self):
         raw_pred = self.regression_model.predict(self.X_test)
         if self.is_log_target:
-            self.y_pred = np.expm1(raw_pred)
+            self.y_pred = np.clip(np.expm1(raw_pred), 0, None)
         else:
             self.y_pred = raw_pred
         return self.y_pred

@@ -1,5 +1,5 @@
 from Modeling import Modeling
-from sklearn.feature_selection import VarianceThreshold, mutual_info_regression
+from sklearn.feature_selection import VarianceThreshold, mutual_info_regression, mutual_info_classif
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -22,7 +22,8 @@ class FeatureSelect(Modeling):
             print(f"No features below variance threshold of {threshold}")
         return self.dataset
 
-    def plotMutualInformation(self, target_col: str, drop_cols: list = None, discrete_features: list = None):
+    def plotMutualInformation(self, target_col: str, drop_cols: list = None,
+                              discrete_features: list = None, classification: bool = False):
         exclude_list = [target_col]
         if drop_cols:
             exclude_list.extend(
@@ -31,18 +32,16 @@ class FeatureSelect(Modeling):
         X = self.dataset.drop(columns=exclude_list).copy()
         y = self.dataset[target_col]
 
-        if discrete_features is None:
-            discrete_mask = [
-                X[col].dtype == 'int64' or X[col].dtype == 'bool' for col in X.columns]
-        else:
-            discrete_mask = [
-                col in discrete_features for col in X.columns if col in X.columns]
+        discrete_features = discrete_features or []
+        # Treat listed columns and any 0/1 columns (e.g. dummies) as discrete
+        discrete_mask = [
+            (col in discrete_features) or X[col].dropna().isin([0, 1]).all()
+            for col in X.columns
+        ]
 
-        mi_scores = mutual_info_regression(
-            X, y,
-            discrete_features=discrete_mask,
-            random_state=42
-        )
+        mi_fn = mutual_info_classif if classification else mutual_info_regression
+        mi_scores = mi_fn(
+            X, y, discrete_features=discrete_mask, random_state=42)
 
         mi_series = pd.Series(
             mi_scores, index=X.columns).sort_values(ascending=True)
@@ -80,6 +79,7 @@ class FeatureSelect(Modeling):
             mi_hasroles = self.plotMutualInformation(
                 target_col='Has_Roles_Replaced',
                 drop_cols=['Human_Roles_Replaced'],
-                discrete_features=discrete_cols
+                discrete_features=discrete_cols,
+                classification=True
             )
             print(mi_hasroles)
