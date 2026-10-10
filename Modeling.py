@@ -1,6 +1,7 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import numpy as np
 
 class Modeling:
     def __init__(self, dataset: pd.DataFrame):
@@ -37,3 +38,9 @@ class Modeling:
         plt.tight_layout()
         plt.title(title)
         plt.show()
+
+    def logTransformFeature(self, columnName):
+        self.dataset[columnName] = np.log1p(self.dataset[columnName])
+
+    def renameColumn(self, columnName, newName):
+        self.dataset.rename(columns={f'{columnName}': f'{newName}'}, inplace=True)

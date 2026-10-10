@@ -1,9 +1,5 @@
 from eda import EDA
-from scipy import stats
-from sklearn.preprocessing import LabelEncoder
-import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
+from feature_select import FeatureSelect
 import pandas as pd
 
 # AI Roles augmented and replaced
@@ -12,16 +8,23 @@ def main():
     try:
         df = pd.read_csv('global_ai.csv')
     except FileNotFoundError as e:
-        print("Could not find dataset: " + e)
+        print("Could not find dataset: " + str(e))
         return
     
     eda = EDA(df)
-    eda.showBasicInfo()
     eda.performEDA()
-    for col in df.columns:
-        eda.showHistogram(col)
 
-    
+    discrete_cols = [
+        'Company_Size', 
+        'Industry', 
+        'Primary_AI_Agent_Role', 
+        'Has_Strict_AI_Governance', 
+        'Cybersecurity_Incidents_YTD',
+        'Has_Roles_Replaced'
+    ]
+
+    featureselect = FeatureSelect(df)
+    featureselect.checkMutualInformation(discrete_cols)
 
 if __name__ == '__main__':
     main()
