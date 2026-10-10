@@ -61,3 +61,10 @@ class FeatureSelect(Modeling):
             discrete_features=discrete_cols
         )
         print(mi_augmented)
+        # Run MI for Human_Roles_Augmented
+        print("\n--- Mutual Information for Has Roles Replaced ---")
+        mi_hasroles = self.plotMutualInformation(
+            target_col='Has_Roles_Replaced', 
+            discrete_features=discrete_cols
+        )
+        print(mi_hasroles)

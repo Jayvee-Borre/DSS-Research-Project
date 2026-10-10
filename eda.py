@@ -37,7 +37,7 @@ class EDA(Modeling):
 
     def checkNullValues(self):
         null_values = self.dataset.isnull().sum()
-        print(f"Null Column Values: {null_values[null_values > 1]}\n\n") # Null values
+        print(f"Null Column Values: {null_values[null_values > 0]}\n\n") # Null values
 
     def checkOutliers(self):
         # Compute Z_Scores for the dataset for outlier detection
