@@ -3,6 +3,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 class Modeling:
     def __init__(self, dataset: pd.DataFrame):
         self.dataset = dataset
@@ -11,7 +12,8 @@ class Modeling:
         return self.dataset
 
     def showBasicInfo(self):
-        print(f"Rows: {self.dataset.shape[0]}\nColumns: {self.dataset.shape[1]}")
+        print(
+            f"Rows: {self.dataset.shape[0]}\nColumns: {self.dataset.shape[1]}")
         print(f"{self.dataset.info()}\n\n")
         print(f"{self.dataset.head()}")
 
@@ -28,10 +30,10 @@ class Modeling:
         plt.show()
 
     def showCorrMatrix(self, title: str):
-        corr_data = self.dataset.corr()
+        corr_data = self.dataset.select_dtypes(include=[np.number]).corr()
         plt.figure(figsize=(12, 10))
         ax = sns.heatmap(corr_data, annot=True, square=True, robust=True, fmt='.1f',
-                            cmap='coolwarm', annot_kws={"size": 6}, linewidths=0)
+                         cmap='coolwarm', annot_kws={"size": 6}, linewidths=0)
         ax.tick_params(axis='x', labelsize=6)
         ax.tick_params(axis='y', labelsize=6)
         plt.xticks(rotation=45, ha='right')
@@ -43,4 +45,4 @@ class Modeling:
         self.dataset[columnName] = np.log1p(self.dataset[columnName])
 
     def renameColumn(self, columnName, newName):
-        self.dataset.rename(columns={f'{columnName}': f'{newName}'}, inplace=True)
+        self.dataset.rename(columns={columnName: newName}, inplace=True)

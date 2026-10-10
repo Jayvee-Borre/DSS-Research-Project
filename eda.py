@@ -1,53 +1,60 @@
 from Modeling import Modeling
 from scipy import stats
-from sklearn.preprocessing import LabelEncoder
-from sklearn.preprocessing import MinMaxScaler
 import numpy as np
 import pandas as pd
+
 
 class EDA(Modeling):
     def __init__(self, dataset: pd.DataFrame):
         super().__init__(dataset)
-    
-    def performEDA(self):
-        le = LabelEncoder()
-        minmax = MinMaxScaler()
-
-        # DROPPING COMPANY ID and Renaming Employee sentiment score feature
-        self.dataset.drop(columns=['Company_ID'], inplace=True)
-        self.renameColumn('Employee_Sentiment_Score_1_to_10', 'Emp_SentimentScore')
-    
-        # Encode object type to int
-        self.dataset['Company_Size'] = le.fit_transform(self.dataset['Company_Size']) # Medium -> 2, Large -> 1, Small -> 3, Enterprise -> 0
-        self.dataset['Has_Strict_AI_Governance'] = le.fit_transform(self.dataset['Has_Strict_AI_Governance'])  # True -> 1, False -> 0
-        self.dataset['Industry'] = le.fit_transform(self.dataset['Industry'])
-        self.dataset['Primary_AI_Agent_Role'] = le.fit_transform(self.dataset['Primary_AI_Agent_Role'])
-
-        # Log transform skewed features
-        self.logTransformFeature('Autonomous_Agents_Deployed')
-        self.logTransformFeature('Human_Roles_Augmented')
-
-        # Fix skewness of employee sentiment score, makes it so its now just
-        # A little bit left skewed
-        self.dataset['Emp_SentimentScore'] = minmax.fit_transform(self.dataset[['Emp_SentimentScore']])
-
-        # Create new column for roles repalced
-        self.dataset['Has_Roles_Replaced'] = (self.dataset['Human_Roles_Replaced'] > 0).astype(int)
-        self.logTransformFeature('Human_Roles_Replaced')
 
     def checkNullValues(self):
-        null_values = self.dataset.isnull().sum()
-        print(f"Null Column Values: {null_values[null_values > 0]}\n\n") # Null values
+        null_counts = self.dataset.isnull().sum()
+        active_nulls = null_counts[null_counts > 0]
+        if active_nulls.empty:
+            print("No missing values found across dataset columns.")
+        else:
+            print(f"Null Column Values:\n{active_nulls}\n")
 
     def checkOutliers(self):
-        # Compute Z_Scores for the dataset for outlier detection
-        df_num = self.dataset.select_dtypes(include='number')
-        for col in df_num:
-            z_score = np.abs(stats.zscore(df_num[col]))
-            outliers = df_num[z_score > 3]
-            if outliers.empty:
-                print(f"No Outliers at {col}")
+        numeric_cols = self.dataset.select_dtypes(include=[np.number]).columns
+        for col in numeric_cols:
+            z_scores = np.abs(stats.zscore(self.dataset[col].dropna()))
+            outlier_count = (z_scores > 3).sum()
+            if outlier_count == 0:
+                print(f"No Z-score outliers (> 3 std) in: {col}")
             else:
-                print(f"Outliers at {col}: {outliers.shape[0]}")
+                print(f"Outliers detected in {col}: {outlier_count} rows")
 
-    
+    def prepareData(self):
+        if 'Company_ID' in self.dataset.columns:
+            self.dataset.drop(columns=['Company_ID'], inplace=True)
+
+        self.renameColumn('Employee_Sentiment_Score_1_to_10',
+                          'Emp_SentimentScore')
+
+        size_mapping = {
+            'Small (1-50)': 0,
+            'Medium (51-500)': 1,
+            'Large (501-5000)': 2,
+            'Enterprise (5000+)': 3
+        }
+        if 'Company_Size' in self.dataset.columns:
+            self.dataset['Company_Size'] = self.dataset['Company_Size'].map(
+                size_mapping)
+
+        if 'Has_Strict_AI_Governance' in self.dataset.columns:
+            self.dataset['Has_Strict_AI_Governance'] = self.dataset['Has_Strict_AI_Governance'].astype(
+                int)
+
+        self.dataset['Has_Roles_Replaced'] = (
+            self.dataset['Human_Roles_Replaced'] > 0).astype(int)
+
+        nominal_cols = ['Industry', 'Primary_AI_Agent_Role']
+        existing_nominals = [
+            c for c in nominal_cols if c in self.dataset.columns]
+        if existing_nominals:
+            self.dataset = pd.get_dummies(
+                self.dataset, columns=existing_nominals, drop_first=True)
+
+        return self.dataset
